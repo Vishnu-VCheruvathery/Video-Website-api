@@ -1,9 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
-const { promisify } = require('util');
 const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
 const ffprobeInstaller = require('@ffprobe-installer/ffprobe');
+
 
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 ffmpeg.setFfprobePath(ffprobeInstaller.path);
@@ -25,6 +25,7 @@ const getVideoDuration = (inputPath) => {
 };
 
 async function encodeVideo(inputPath, outputDir, baseName) {
+  console.log(typeof uploadQueue)
   if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
 
   const duration = await getVideoDuration(inputPath);
@@ -68,6 +69,17 @@ async function encodeVideo(inputPath, outputDir, baseName) {
         .run();
     });
   }));
+
+try {
+  const { uploadQueue } = require('../worker/src'); // ← import here, not top-level
+  if (uploadQueue && typeof uploadQueue.add === 'function') {
+    await uploadQueue.add('upload', { title:baseName, outputDir });
+  } else {
+    console.error("uploadQueue is not properly initialized.");
+  }
+} catch (err) {
+  console.error("Failed to access uploadQueue:", err);
+}
 }
 
-module.exports = encodeVideo;
+module.exports = {encodeVideo};

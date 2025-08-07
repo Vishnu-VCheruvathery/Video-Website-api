@@ -2,10 +2,9 @@ require('dotenv').config()
 const { PutObjectCommand } = require('@aws-sdk/client-s3');
 const prisma = require("../utils/prismaClient");
 const s3 = require('../utils/s3Client');
-const encodeVideo = require('../scripts/encode');
-
 const path = require('path');
 const { enCodeQueue } = require('../worker/src');
+
 
 module.exports.getUserVideos = async(req,res) => {
     const {id} = req.params;
@@ -57,14 +56,10 @@ module.exports.postVideo = async(req,res) => {
     const {title} = req.body;
     const inputPath = req.file.path;
     const outputDir = path.join(__dirname, '..', 'encoded', title)
-    // if(!file){
-    2
-    //     return res.status(400).json({message: 'Please upload file!'})
-    // }
  
     try {
-        //    await enCodeQueue.add('encode', {title, inputPath, outputDir})
-        encodeVideo(inputPath, outputDir, title)
+     
+           await enCodeQueue.add('encode', {title, inputPath, outputDir})
            return res.status(200).json({message: 'Video Uploaded!'})
     } catch (error) {
         console.log(error);
